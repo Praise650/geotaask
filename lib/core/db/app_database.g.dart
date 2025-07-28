@@ -129,7 +129,7 @@ class _$TaskDao extends TaskDao {
         _tagLocationEntityInsertionAdapter = InsertionAdapter(
             database,
             'tag_location_entity',
-            (TagLocationEntity item) => <String, Object?>{
+            (MarkerEntity item) => <String, Object?>{
                   'id': item.id,
                   'radius': item.radius,
                   'latitude': item.latitude,
@@ -146,7 +146,7 @@ class _$TaskDao extends TaskDao {
             database,
             'tag_location_entity',
             ['id'],
-            (TagLocationEntity item) => <String, Object?>{
+            (MarkerEntity item) => <String, Object?>{
                   'id': item.id,
                   'radius': item.radius,
                   'latitude': item.latitude,
@@ -168,9 +168,9 @@ class _$TaskDao extends TaskDao {
 
   final InsertionAdapter<UserEntity> _userEntityInsertionAdapter;
 
-  final InsertionAdapter<TagLocationEntity> _tagLocationEntityInsertionAdapter;
+  final InsertionAdapter<MarkerEntity> _tagLocationEntityInsertionAdapter;
 
-  final UpdateAdapter<TagLocationEntity> _tagLocationEntityUpdateAdapter;
+  final UpdateAdapter<MarkerEntity> _tagLocationEntityUpdateAdapter;
 
   @override
   Future<UserEntity?> getUserProfile() async {
@@ -183,9 +183,9 @@ class _$TaskDao extends TaskDao {
   }
 
   @override
-  Stream<List<TagLocationEntity>> getGeofenceMarkers() {
+  Stream<List<MarkerEntity>> getGeofenceMarkers() {
     return _queryAdapter.queryListStream('SELECT * FROM tag_location_entity',
-        mapper: (Map<String, Object?> row) => TagLocationEntity(
+        mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
             latitude: row['latitude'] as double?,
@@ -202,10 +202,10 @@ class _$TaskDao extends TaskDao {
   }
 
   @override
-  Future<TagLocationEntity?> getGeofenceMarkerById(int id) async {
+  Future<MarkerEntity?> getGeofenceMarkerById(int id) async {
     return _queryAdapter.query(
         'SELECT * FROM tag_location_entity WHERE id = ?1',
-        mapper: (Map<String, Object?> row) => TagLocationEntity(
+        mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
             latitude: row['latitude'] as double?,
@@ -221,11 +221,11 @@ class _$TaskDao extends TaskDao {
   }
 
   @override
-  Future<TagLocationEntity?> getGeofenceMarkerByMarkerId(
+  Future<MarkerEntity?> getGeofenceMarkerByMarkerId(
       String markerId) async {
     return _queryAdapter.query(
         'SELECT * FROM tag_location_entity WHERE markerId = ?1',
-        mapper: (Map<String, Object?> row) => TagLocationEntity(
+        mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
             latitude: row['latitude'] as double?,
@@ -265,17 +265,17 @@ class _$TaskDao extends TaskDao {
   }
 
   @override
-  Future<void> createGeofenceMarker(TagLocationEntity entity) async {
+  Future<void> createGeofenceMarker(MarkerEntity entity) async {
     await _tagLocationEntityInsertionAdapter.insert(
         entity, OnConflictStrategy.replace);
   }
 
   @override
-  Future<void> updateGeofenceMarker(TagLocationEntity entity) async {
+  Future<void> updateGeofenceMarker(MarkerEntity entity) async {
     await _tagLocationEntityUpdateAdapter.update(
         entity, OnConflictStrategy.abort);
   }
 }
 
 // ignore_for_file: unused_element
-final _tagLocationStatusConverter = TagLocationStatusConverter();
+final _tagLocationStatusConverter = MarkerStatusConverter();
