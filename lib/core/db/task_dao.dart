@@ -19,6 +19,10 @@ abstract class TaskDao {
   @Query("SELECT * FROM tag_location_entity")
   Stream<List<MarkerEntity>> getGeofenceMarkers();
 
+  // Fetch all geofence markers
+  @Query("SELECT * FROM tag_location_entity")
+  Future<List<MarkerEntity>> fetchGeofenceMarkers();
+
   // Fetch geofence marker by id
   @Query("SELECT * FROM tag_location_entity WHERE id = :id")
   Future<MarkerEntity?> getGeofenceMarkerById(int id);

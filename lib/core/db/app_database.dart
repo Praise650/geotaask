@@ -27,9 +27,9 @@ abstract class AppDatabase extends FloorDatabase {
     );
     final res = await _instance.taskDao.getUserProfile();
     final markerRes = _instance.taskDao.getGeofenceMarkers();
-    developer.log("Current User; ${res?.toJson()}");
+    developer.log("Current User: ${res?.toJson()}");
     markerRes.listen((onData){
-      developer.log("Available markers; ${onData.length}");
+      developer.log("Available markers: ${onData.length}");
     });
   }
 }
