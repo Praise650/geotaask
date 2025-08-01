@@ -2,17 +2,27 @@
 class LocationEntity {
   final double latitude;
   final double longitude;
-  final DateTime timestamp;
+  final DateTime? timestamp;
   final double? accuracy;
   final String? address;
 
   LocationEntity({
     required this.latitude,
     required this.longitude,
-    required this.timestamp,
+    this.timestamp,
     this.accuracy,
     this.address,
   });
+
+  factory LocationEntity.fromJson(Map<String, dynamic> json) {
+    return LocationEntity(
+      longitude: json["longitude"],
+      latitude: json["latitude"],
+      timestamp: DateTime.parse(json['timestamp']),
+      address: json['address'],
+      accuracy: json['accuracy'],
+    );
+  }
 
   @override
   String toString() {
