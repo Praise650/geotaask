@@ -9,6 +9,7 @@ abstract class Routes {
 
   static const HOME = "home";
   static const HOMEEXAMPLE = "home-example";
+  static const HISTORY = "history";
   static const PROFILE = "profile";
 }
 
@@ -23,5 +24,6 @@ abstract class Paths {
 
   static const HOME = "/${Routes.HOME}";
   static const HOMEEXAMPLE = "/${Routes.HOMEEXAMPLE}";
+  static const HISTORY = "/${Routes.HISTORY}";
   static const PROFILE = "/${Routes.PROFILE}";
 }

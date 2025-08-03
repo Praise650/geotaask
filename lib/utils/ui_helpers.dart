@@ -1,8 +1,6 @@
 // ui_helpers.dart
 import 'package:flutter/material.dart';
 
-import '../ui/layout/base_bottom_sheet.dart';
-
 class UIHelpers {
   static Future<T?> showCustomBottomSheet<T>(
     BuildContext context, {
@@ -13,13 +11,7 @@ class UIHelpers {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       //todo: add bottomsheet layout
-      builder:
-          (context) => BaseBottomSheet(
-            showHandleBar: true,
-            hasScrollableChild: false,
-            builder: (context, size) => child,
-          ),
-      // builder: (context) => child,
+      builder: (context) =>  child
     );
   }
 

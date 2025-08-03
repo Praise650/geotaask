@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:geotaask/core/routes/routes.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../ui/layout/bottom_nav_layout.dart';
+import '../../ui/screens/history/history_screen.dart';
 import '../../ui/screens/home/home_screen.dart';
 import '../../ui/screens/home_example/home_example.dart';
-import '../../ui/screens/native_geofence/native_home_screen.dart';
 import '../../ui/screens/onboarding/onboarding_screen.dart';
 import '../../ui/screens/onboarding/splash_screen.dart';
-import '../../ui/screens/profile/pofile_screen.dart';
+import '../../ui/screens/profile/profile_screen.dart';
+import 'routes.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -37,8 +37,7 @@ final router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       path: Paths.HOMEEXAMPLE,
       name: Routes.HOMEEXAMPLE,
-      builder: (context, state) => const NativeMyApp(),
-      /// revert to [HomeExample()] later
+      builder: (context, state) => const HomeExample(),
     ),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
@@ -51,12 +50,12 @@ final router = GoRouter(
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const HomeScreen(),
         ),
-        // GoRoute(
-        //   path: Paths.SERVICES,
-        //   name: Routes.SERVICES,
-        //   parentNavigatorKey: _shellNavigatorKey,
-        //   builder: (context, state) => const ServicesScreen(),
-        // ),
+        GoRoute(
+          path: Paths.HISTORY,
+          name: Routes.HISTORY,
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) => const HistoryScreen(),
+        ),
         // GoRoute(
         //   path: Paths.WALLET,
         //   name: Routes.WALLET,
