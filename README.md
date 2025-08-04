@@ -26,7 +26,7 @@ Technical Components:
     Features:
         Interactive map to pin tasks with customizable radii for geofences.
         Background notifications when entering/exiting geofenced areas.
-        Task categorization and filtering on the map (e.g., personal, work).
+[//]: # (        Task categorization and filtering on the map &#40;e.g., personal, work&#41;.)
         Privacy controls to pause location tracking.
     Challenges:
         Optimizing battery usage for continuous location monitoring.
