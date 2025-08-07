@@ -98,7 +98,7 @@ class _$AppDatabase extends AppDatabase {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `user_entity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `userId` TEXT, `address` TEXT, `avatar` TEXT)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `tag_location_entity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `radius` REAL, `latitude` REAL, `longitude` REAL, `markerId` TEXT, `title` TEXT, `description` TEXT, `createdAt` TEXT, `isActive` INTEGER NOT NULL, `status` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `tag_location_entity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `radius` REAL, `latitude` REAL, `longitude` REAL, `markerId` TEXT, `title` TEXT, `description` TEXT, `createdAt` TEXT, `enabled` INTEGER NOT NULL, `status` TEXT NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -126,10 +126,10 @@ class _$TaskDao extends TaskDao {
                   'address': item.address,
                   'avatar': item.avatar
                 }),
-        _tagLocationEntityInsertionAdapter = InsertionAdapter(
+        _markerEntityInsertionAdapter = InsertionAdapter(
             database,
             'tag_location_entity',
-            (TagLocationEntity item) => <String, Object?>{
+            (MarkerEntity item) => <String, Object?>{
                   'id': item.id,
                   'radius': item.radius,
                   'latitude': item.latitude,
@@ -138,15 +138,15 @@ class _$TaskDao extends TaskDao {
                   'title': item.title,
                   'description': item.description,
                   'createdAt': item.createdAt,
-                  'isActive': item.isActive ? 1 : 0,
-                  'status': _tagLocationStatusConverter.encode(item.status)
+                  'enabled': item.enabled,
+                  'status': _markerStatusConverter.encode(item.status)
                 },
             changeListener),
-        _tagLocationEntityUpdateAdapter = UpdateAdapter(
+        _markerEntityUpdateAdapter = UpdateAdapter(
             database,
             'tag_location_entity',
             ['id'],
-            (TagLocationEntity item) => <String, Object?>{
+            (MarkerEntity item) => <String, Object?>{
                   'id': item.id,
                   'radius': item.radius,
                   'latitude': item.latitude,
@@ -155,8 +155,8 @@ class _$TaskDao extends TaskDao {
                   'title': item.title,
                   'description': item.description,
                   'createdAt': item.createdAt,
-                  'isActive': item.isActive ? 1 : 0,
-                  'status': _tagLocationStatusConverter.encode(item.status)
+                  'enabled': item.enabled,
+                  'status': _markerStatusConverter.encode(item.status)
                 },
             changeListener);
 
@@ -168,9 +168,9 @@ class _$TaskDao extends TaskDao {
 
   final InsertionAdapter<UserEntity> _userEntityInsertionAdapter;
 
-  final InsertionAdapter<TagLocationEntity> _tagLocationEntityInsertionAdapter;
+  final InsertionAdapter<MarkerEntity> _markerEntityInsertionAdapter;
 
-  final UpdateAdapter<TagLocationEntity> _tagLocationEntityUpdateAdapter;
+  final UpdateAdapter<MarkerEntity> _markerEntityUpdateAdapter;
 
   @override
   Future<UserEntity?> getUserProfile() async {
@@ -183,9 +183,9 @@ class _$TaskDao extends TaskDao {
   }
 
   @override
-  Stream<List<TagLocationEntity>> getGeofenceMarkers() {
+  Stream<List<MarkerEntity>> getGeofenceMarkers() {
     return _queryAdapter.queryListStream('SELECT * FROM tag_location_entity',
-        mapper: (Map<String, Object?> row) => TagLocationEntity(
+        mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
             latitude: row['latitude'] as double?,
@@ -194,18 +194,16 @@ class _$TaskDao extends TaskDao {
             title: row['title'] as String?,
             description: row['description'] as String?,
             createdAt: row['createdAt'] as String?,
-            isActive: (row['isActive'] as int) != 0,
-            status:
-                _tagLocationStatusConverter.decode(row['status'] as String)),
+            enabled: row['enabled'] as int?,
+            status: _markerStatusConverter.decode(row['status'] as String)),
         queryableName: 'tag_location_entity',
         isView: false);
   }
 
   @override
-  Future<TagLocationEntity?> getGeofenceMarkerById(int id) async {
-    return _queryAdapter.query(
-        'SELECT * FROM tag_location_entity WHERE id = ?1',
-        mapper: (Map<String, Object?> row) => TagLocationEntity(
+  Future<List<MarkerEntity>> fetchGeofenceMarkers() async {
+    return _queryAdapter.queryList('SELECT * FROM tag_location_entity',
+        mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
             latitude: row['latitude'] as double?,
@@ -214,18 +212,33 @@ class _$TaskDao extends TaskDao {
             title: row['title'] as String?,
             description: row['description'] as String?,
             createdAt: row['createdAt'] as String?,
-            isActive: (row['isActive'] as int) != 0,
-            status:
-                _tagLocationStatusConverter.decode(row['status'] as String)),
+            enabled: row['enabled'] as int,
+            status: _markerStatusConverter.decode(row['status'] as String)));
+  }
+
+  @override
+  Future<MarkerEntity?> getGeofenceMarkerById(int id) async {
+    return _queryAdapter.query(
+        'SELECT * FROM tag_location_entity WHERE id = ?1',
+        mapper: (Map<String, Object?> row) => MarkerEntity(
+            id: row['id'] as int?,
+            radius: row['radius'] as double?,
+            latitude: row['latitude'] as double?,
+            longitude: row['longitude'] as double?,
+            markerId: row['markerId'] as String?,
+            title: row['title'] as String?,
+            description: row['description'] as String?,
+            createdAt: row['createdAt'] as String?,
+            enabled: row['enabled'] as int,
+            status: _markerStatusConverter.decode(row['status'] as String)),
         arguments: [id]);
   }
 
   @override
-  Future<TagLocationEntity?> getGeofenceMarkerByMarkerId(
-      String markerId) async {
+  Future<MarkerEntity?> getGeofenceMarkerByMarkerId(String markerId) async {
     return _queryAdapter.query(
         'SELECT * FROM tag_location_entity WHERE markerId = ?1',
-        mapper: (Map<String, Object?> row) => TagLocationEntity(
+        mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
             latitude: row['latitude'] as double?,
@@ -234,9 +247,8 @@ class _$TaskDao extends TaskDao {
             title: row['title'] as String?,
             description: row['description'] as String?,
             createdAt: row['createdAt'] as String?,
-            isActive: (row['isActive'] as int) != 0,
-            status:
-                _tagLocationStatusConverter.decode(row['status'] as String)),
+            enabled: row['enabled'] as int,
+            status: _markerStatusConverter.decode(row['status'] as String)),
         arguments: [markerId]);
   }
 
@@ -265,17 +277,16 @@ class _$TaskDao extends TaskDao {
   }
 
   @override
-  Future<void> createGeofenceMarker(TagLocationEntity entity) async {
-    await _tagLocationEntityInsertionAdapter.insert(
+  Future<void> createGeofenceMarker(MarkerEntity entity) async {
+    await _markerEntityInsertionAdapter.insert(
         entity, OnConflictStrategy.replace);
   }
 
   @override
-  Future<void> updateGeofenceMarker(TagLocationEntity entity) async {
-    await _tagLocationEntityUpdateAdapter.update(
-        entity, OnConflictStrategy.abort);
+  Future<void> updateGeofenceMarker(MarkerEntity entity) async {
+    await _markerEntityUpdateAdapter.update(entity, OnConflictStrategy.abort);
   }
 }
 
 // ignore_for_file: unused_element
-final _tagLocationStatusConverter = TagLocationStatusConverter();
+final _markerStatusConverter = MarkerStatusConverter();

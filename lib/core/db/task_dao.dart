@@ -1,6 +1,6 @@
 import 'package:floor/floor.dart';
 
-import '../model/tag_location_entity.dart';
+import '../model/marker_entity.dart';
 import '../model/user_entity.dart';
 
 @dao
@@ -13,19 +13,23 @@ abstract class TaskDao {
 
   // Create a geofence marker
   @Insert(onConflict: OnConflictStrategy.replace)
-  Future<void> createGeofenceMarker(TagLocationEntity entity);
+  Future<void> createGeofenceMarker(MarkerEntity entity);
 
   // Fetch all geofence markers
   @Query("SELECT * FROM tag_location_entity")
-  Stream<List<TagLocationEntity>> getGeofenceMarkers();
+  Stream<List<MarkerEntity>> getGeofenceMarkers();
+
+  // Fetch all geofence markers
+  @Query("SELECT * FROM tag_location_entity")
+  Future<List<MarkerEntity>> fetchGeofenceMarkers();
 
   // Fetch geofence marker by id
   @Query("SELECT * FROM tag_location_entity WHERE id = :id")
-  Future<TagLocationEntity?> getGeofenceMarkerById(int id);
+  Future<MarkerEntity?> getGeofenceMarkerById(int id);
 
   // Fetch geofence marker by markerId
   @Query("SELECT * FROM tag_location_entity WHERE markerId = :markerId")
-  Future<TagLocationEntity?> getGeofenceMarkerByMarkerId(String markerId);
+  Future<MarkerEntity?> getGeofenceMarkerByMarkerId(String markerId);
 
   // Delete all geofence markers
   @Query("DELETE FROM tag_location_entity")
@@ -41,7 +45,7 @@ abstract class TaskDao {
 
   // Update geofence marker
   @Update()
-  Future<void> updateGeofenceMarker(TagLocationEntity entity);
+  Future<void> updateGeofenceMarker(MarkerEntity entity);
 }
 
   // @Insert(onConflict: OnConflictStrategy.replace)
