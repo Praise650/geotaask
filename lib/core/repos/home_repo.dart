@@ -2,7 +2,6 @@
 
 import '../db/app_database.dart';
 import '../model/marker_entity.dart';
-import '../services/geo_fence_service.dart';
 
 abstract class HomeRepository {
   Stream<List<MarkerEntity>> fetchGeoFenceMarkers();
@@ -16,11 +15,9 @@ abstract class HomeRepository {
 // Repository Implementation
 class HomeRepositoryImpl implements HomeRepository {
   final AppDatabase _dbService;
-  final GeoFenceService _geoFenceService;
 
-  HomeRepositoryImpl({AppDatabase? dbService, GeoFenceService? geoFenceService})
-    : _dbService = dbService ?? AppDatabase.instance,
-      _geoFenceService = geoFenceService ?? GeoFenceService();
+  HomeRepositoryImpl({AppDatabase? dbService})
+    : _dbService = dbService ?? AppDatabase.instance;
 
   @override
   Stream<List<MarkerEntity>> fetchGeoFenceMarkers() =>
@@ -41,35 +38,36 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<void> addGeofenceMarker(MarkerEntity region) async {
     try {
-      await _geoFenceService.addGeofenceRegion(region); // Add geofence first
-      try {
-        await _dbService.taskDao.createGeofenceMarker(region); // Then database
-      } catch (e) {
-        // Rollback geofence if database fails
-        await _geoFenceService.deleteGeofenceRegion(region.markerId!);
-        throw Exception('Failed to add geofence marker: $e');
-      }
+      await _dbService.taskDao.createGeofenceMarker(region); // Then database
     } catch (e) {
-      throw Exception('Failed to add geofence region: $e');
+      throw Exception('Failed to add geofence marker: $e');
     }
   }
 
   @override
   Future<void> updateGeofenceMarker(MarkerEntity region) async {
-    await _dbService.taskDao.updateGeofenceMarker(region);
-    await _geoFenceService.deleteGeofenceRegion(region.markerId!);
-    await _geoFenceService.addGeofenceRegion(region);
+    try {
+      await _dbService.taskDao.updateGeofenceMarker(region);
+    } catch (e) {
+      throw Exception('Failed to add geofence marker: $e');
+    }
   }
 
   @override
   Future<void> completeGeofenceMarker(MarkerEntity region) async {
-    await _dbService.taskDao.updateGeofenceMarker(region);
-    await _geoFenceService.deleteGeofenceRegion(region.markerId!);
+    try {
+      await _dbService.taskDao.updateGeofenceMarker(region);
+    } catch (e) {
+      throw Exception('Failed to add geofence marker: $e');
+    }
   }
 
   @override
   Future<void> deleteGeofenceMarker(String markerId) async {
-    await _dbService.taskDao.deleteGeofenceMarkerByMarkerId(markerId);
-    await _geoFenceService.deleteGeofenceRegion(markerId);
+    try {
+      await _dbService.taskDao.deleteGeofenceMarkerByMarkerId(markerId);
+    } catch (e) {
+      throw Exception('Failed to add geofence marker: $e');
+    }
   }
 }

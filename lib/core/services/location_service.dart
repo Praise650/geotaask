@@ -5,65 +5,6 @@ import '../exceptions/location_exception.dart';
 import '../model/location_entity.dart';
 
 class LocationService {
-  // Check if location services are enabled
-  Future<bool> _isLocationServiceEnabled() async =>
-      await Geolocator.isLocationServiceEnabled();
-
-  // Check location permission status
-  Future<LocationPermission> _checkPermission() async =>
-      await Geolocator.checkPermission();
-
-  // Request location permission
-  Future<LocationPermission> _requestPermission() async =>
-      await Geolocator.requestPermission();
-
-  //step 1 initialise
-  Future<void> checkLocationPermission() async{
-    // Check if location services are enabled
-    bool serviceEnabled = await _isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw LocationServiceDisabledException('Location services are disabled');
-    }
-
-    // Check permissions
-    LocationPermission permission = await _checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await _requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw LocationPermissionDeniedException(
-          'Location permissions are denied',
-        );
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      throw LocationPermissionDeniedException(
-        'Location permissions are permanently denied, we cannot request permissions.',
-      );
-    }
-  }
-
-  // Future<LocationPermissionStatus> initLocationPermission() async {
-  //   bool serviceEnabled = await _isLocationServiceEnabled();
-  //   if (!serviceEnabled) {
-  //     return LocationPermissionStatus.serviceDisabled;
-  //   }
-  //
-  //   LocationPermission permission = await _checkPermission();
-  //   if (permission == LocationPermission.denied) {
-  //     permission = await _requestPermission();
-  //     if (permission == LocationPermission.denied) {
-  //       return LocationPermissionStatus.denied;
-  //     }
-  //   }
-  //
-  //   if (permission == LocationPermission.deniedForever) {
-  //     return LocationPermissionStatus.permanentlyDenied;
-  //   }
-  //
-  //   return LocationPermissionStatus.granted;
-  // }
-
   // Get current position
   Future<LocationEntity> getCurrentPosition() async {
     final position = await Geolocator.getCurrentPosition(
