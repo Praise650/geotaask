@@ -4,10 +4,12 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 import '../../core/blocs/geofence/geofence_bloc.dart';
 import '../../core/blocs/location/location_bloc.dart';
+import '../../core/enums/marker_status.dart';
 import '../../core/model/marker_entity.dart';
 import '../../core/model/location_entity.dart';
 import '../../utils/ui_helpers.dart';
 import '../layout/base_bottom_sheet.dart';
+import '../widgets/inputs/custom_date_picker.dart';
 import '../widgets/inputs/input_field.dart';
 import '../../utils/helpers.dart';
 
@@ -35,6 +37,8 @@ class _CreateLocationTagByTagBottomSheetState
   final titleCtr = TextEditingController();
   final radiusCtr = TextEditingController();
   final descCtr = TextEditingController();
+  DateTime? startDateCtr;
+  DateTime? endDateCtr;
   LocationEntity? currentLocation; // Remove `late`, initialize as null
 
   bool? get validateForm => formKey.currentState?.validate();
@@ -159,6 +163,22 @@ class _CreateLocationTagByTagBottomSheetState
                             labelText: "Description",
                             maxLines: 2,
                           ),
+                          CustomDateTimePicker(
+                            initialDateTime: DateTime.now(),
+                            onChanged: (newDateTime) {
+                              startDateCtr = newDateTime;
+                              print('DateTime 1 changed: $newDateTime');
+                            },
+                            hintText: 'Choose a start date and time',
+                          ),
+                          CustomDateTimePicker(
+                            initialDateTime: DateTime.now(),
+                            onChanged: (newDateTime) {
+                              endDateCtr = newDateTime;
+                              print('DateTime 1 changed: $newDateTime');
+                            },
+                            hintText: 'Choose a start date and time',
+                          ),
                         ],
                       ),
                       TextButton(
@@ -179,6 +199,12 @@ class _CreateLocationTagByTagBottomSheetState
                               title: titleCtr.text,
                               markerId: Helpers.generateId(),
                               description: descCtr.text,
+                              radius: double.parse(radiusCtr.text),
+                              createdAt: DateTime.now(),
+                              status: MarkerStatus.enabled,
+                              startsAt: startDateCtr,
+                              endsAt: endDateCtr,
+                              notified: false,
                             );
                             saveTag(result);
                           }
