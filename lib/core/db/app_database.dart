@@ -10,7 +10,7 @@ import '../model/marker_entity.dart';
 
 part 'app_database.g.dart';
 
-@TypeConverters([MarkerStatusConverter])
+@TypeConverters([MarkerStatusConverter, DateTimeStringConverter, BoolConverter])
 @Database(version: 1, entities: [UserEntity, MarkerEntity])
 abstract class AppDatabase extends FloorDatabase {
   static late AppDatabase _instance;
@@ -22,13 +22,8 @@ abstract class AppDatabase extends FloorDatabase {
   static Future<void> init() async {
     _instance = await $FloorAppDatabase.databaseBuilder("geotaask.db").build();
     developer.log("Init Database: ${_instance.database.database.isOpen}");
-    await _instance.taskDao.saveUser(
-      UserEntity(userId: "userId", address: "plot A", id: 0, avatar: "dfddfd"),
-    );
-    final res = await _instance.taskDao.getUserProfile();
     final markerRes = _instance.taskDao.getGeofenceMarkers();
-    developer.log("Current User: ${res?.toJson()}");
-    markerRes.listen((onData){
+    markerRes.listen((onData) {
       developer.log("Available markers: ${onData.length}");
     });
   }

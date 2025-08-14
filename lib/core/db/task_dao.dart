@@ -1,5 +1,6 @@
 import 'package:floor/floor.dart';
 
+import '../enums/marker_status.dart';
 import '../model/marker_entity.dart';
 import '../model/user_entity.dart';
 
@@ -16,31 +17,34 @@ abstract class TaskDao {
   Future<void> createGeofenceMarker(MarkerEntity entity);
 
   // Fetch all geofence markers
-  @Query("SELECT * FROM tag_location_entity")
+  @Query("SELECT * FROM geofences")
   Stream<List<MarkerEntity>> getGeofenceMarkers();
 
   // Fetch all geofence markers
-  @Query("SELECT * FROM tag_location_entity")
+  @Query("SELECT * FROM geofences")
   Future<List<MarkerEntity>> fetchGeofenceMarkers();
 
   // Fetch geofence marker by id
-  @Query("SELECT * FROM tag_location_entity WHERE id = :id")
+  @Query("SELECT * FROM geofences WHERE id = :id")
   Future<MarkerEntity?> getGeofenceMarkerById(int id);
 
   // Fetch geofence marker by markerId
-  @Query("SELECT * FROM tag_location_entity WHERE markerId = :markerId")
+  @Query("SELECT * FROM geofences WHERE markerId = :markerId")
   Future<MarkerEntity?> getGeofenceMarkerByMarkerId(String markerId);
 
+  @Query("SELECT * FROM geofences WHERE status = :status")
+  Future<List<MarkerEntity>?> fetchGeofenceMarkerByStatus(MarkerStatus status);
+
   // Delete all geofence markers
-  @Query("DELETE FROM tag_location_entity")
+  @Query("DELETE FROM geofences")
   Future<void> deleteGeofenceMarkers();
 
   // Delete geofence marker by id
-  @Query("DELETE FROM tag_location_entity WHERE id = :id")
+  @Query("DELETE FROM geofences WHERE id = :id")
   Future<void> deleteGeofenceMarkerId(int id);
 
   // Delete geofence marker by markerId
-  @Query("DELETE FROM tag_location_entity WHERE markerId = :markerId")
+  @Query("DELETE FROM geofences WHERE markerId = :markerId")
   Future<void> deleteGeofenceMarkerByMarkerId(String markerId);
 
   // Update geofence marker
