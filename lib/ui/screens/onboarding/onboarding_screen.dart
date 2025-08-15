@@ -1,13 +1,176 @@
-import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+//
+// import '../../../core/services/onboarding_manager.dart';
+// import '../../dialogs/location_permission_dialog.dart';
+// import 'parts/avatar_setup.dart';
+// import 'parts/preferences_step.dart';
+// import 'parts/user_form_screen.dart';
+// import 'parts/welcome_step.dart';
+//
+// class ProfileSetupScreen extends StatefulWidget {
+//   const ProfileSetupScreen({super.key});
+//
+//   @override
+//   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+// }
+//
+// class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+//   PageController _pageController = PageController();
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadCurrentStep();
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return BlocBuilder<ProfileSetupCubit, int>(
+//         builder: (context, _currentStep) {
+//         return Scaffold(
+//           extendBody: true,
+//           extendBodyBehindAppBar: true,
+//           // appBar: AppBar(
+//           //   automaticallyImplyLeading: true,
+//           //   backgroundColor: Colors.white,
+//           //   leading: IconButton(
+//           //     icon: const Icon(Icons.keyboard_arrow_left),
+//           //     onPressed: () => router.pop(),
+//           //   ),
+//           //   title: const Text("Set Profile Avatar"),
+//           //   elevation: 5,
+//           // ),
+//           body: Container(
+//             decoration: const BoxDecoration(
+//               gradient: LinearGradient(
+//                 begin: Alignment.topLeft,
+//                 end: Alignment.bottomRight,
+//                 colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+//               ),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 if(_currentStep > 0)
+//                 IconButton(
+//                   icon: const Icon(
+//                     Icons.keyboard_arrow_left,
+//                     color: Colors.white,
+//                   ),
+//                   onPressed: () {
+//                     _pageController.previousPage(
+//                       duration: Duration(milliseconds: 300),
+//                       curve: Curves.easeInOut,
+//                     );
+//                   },
+//                 ),
+//                 Expanded(
+//                   child: Padding(
+//                     padding: const EdgeInsets.all(16.0),
+//                     child: PageView.builder(
+//                       controller: _pageController,
+//                       physics: NeverScrollableScrollPhysics(),
+//                       onPageChanged: (index) async {
+//                         setState(() => _currentStep = index);
+//                         await OnboardingManager.saveCurrentStep(index);
+//                       },
+//                       itemCount: _steps.length,
+//                       itemBuilder: (context, index) {
+//                         return _steps[index].widget;
+//                       },
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           bottomNavigationBar: Container(
+//             color: Colors.transparent,
+//             padding: EdgeInsets.all(16),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.end,
+//               children: [
+//                 ElevatedButton(
+//                   onPressed: _nextStep,
+//                   child: Text(_currentStep == _steps.length - 1 ? 'Finish' : 'Next'),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         );
+//       }
+//     );
+//   }
+// }
+//
+// class ProfileSetupCubit extends Cubit<int> {
+//   ProfileSetupCubit():super(0);
+//
+//
+//   final List<OnboardingStep> _steps = [
+//     OnboardingStep(
+//       title: "Welcome",
+//       description: "Welcome to our app!",
+//       widget: WelcomeStep(),
+//     ),
+//     OnboardingStep(
+//       title: "Profile Setup",
+//       description: "Let's set up your profile",
+//       widget: UserFormScreen(),
+//     ),
+//     OnboardingStep(
+//       title: "Avatar Setup",
+//       description: "Let's set up your avatar",
+//       widget: AvatarSetup(),
+//     ),
+//     OnboardingStep(
+//       title: "Preferences",
+//       description: "Choose your preferences",
+//       widget: PreferencesStep(),
+//     ),
+//   ];
+//
+//   Future<void> _loadCurrentStep() async {
+//     final step = await OnboardingManager.getCurrentStep();
+//     setState(() {
+//       _currentStep = step;
+//     });
+//     _pageController = PageController(initialPage: step);
+//   }
+//
+//   Future<void> _nextStep() async {
+//     if (_currentStep < _steps.length - 1) {
+//       _currentStep++;
+//       await OnboardingManager.saveCurrentStep(_currentStep);
+//       _pageController.nextPage(
+//         duration: Duration(milliseconds: 300),
+//         curve: Curves.easeInOut,
+//       );
+//     } else {
+//       await OnboardingManager.completeOnboarding();
+//       _navigateToMain();
+//     }
+//   }
+//
+//   Future<void> _navigateToMain() async {
+//     // Handle start button press
+//     // _onStartPressed(context);
+//     // Show explanation dialog
+//     await showDialog(
+//       context: context,
+//       builder:
+//           (context) => LocationPermissionDialog(),
+//     );
+//   }
+//
+// }
 
-import '../../../app/app_setup.locator.dart';
-import '../../../core/exceptions/location_exception.dart';
-import '../../../core/routes/router.dart';
-import '../../../core/routes/routes.dart';
-import '../../../core/services/geo_fence_service.dart';
-import '../../../core/services/location_service.dart';
-import '../../widgets/app_logo.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'cubit/onboarding_cubit.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,267 +180,89 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Load current step when widget initializes
+    context.read<OnboardingCubit>().loadCurrentStep();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
+    return BlocConsumer<OnboardingCubit, OnboardingState>(
+      listener: (context, state) {
+        // Update PageController when step changes
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            state.currentStep,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      },
+      builder: (context, state) {
+        // Initialize PageController with current step
+        if (!_pageController.hasClients) {
+          _pageController = PageController(initialPage: state.currentStep);
+        }
+
+        final cubit = context.read<OnboardingCubit>();
+
+        return Scaffold(
+          extendBody: true,
+          extendBodyBehindAppBar: true,
+          resizeToAvoidBottomInset: false,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+              ),
+            ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Spacer(),
-
-                AppLogo(),
-
-                const SizedBox(height: 16),
-
-                // Subtitle
-                Text(
-                  'Stay connected with location-based notifications and reminders',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white.withOpacity(0.8),
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 60),
-
-                // Features
-                _buildFeatureItem(
-                  icon: Icons.notifications_active,
-                  title: 'Smart Notifications',
-                  description:
-                      'Get notified when you enter or leave specific areas',
-                ),
-
-                const SizedBox(height: 20),
-
-                _buildFeatureItem(
-                  icon: Icons.map,
-                  title: 'Custom Zones',
-                  description:
-                      'Create personalized geofences for work, home, and more',
-                ),
-
-                const SizedBox(height: 20),
-
-                _buildFeatureItem(
-                  icon: Icons.battery_saver,
-                  title: 'Battery Optimized',
-                  description:
-                      'Efficient location tracking that saves your battery',
-                ),
-
-                const Spacer(),
-
-                // Start Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
+                if (state.currentStep > 0)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.keyboard_arrow_left,
+                      color: Colors.white,
+                    ),
                     onPressed: () {
-                      // Handle start button press
-                      // _onStartPressed(context);
-                      // Show explanation dialog
-                      showDialog(
-                        context: context,
-                        builder:
-                            (context) => AlertDialog(
-                              title: Text('Background Location Permission'),
-                              content: Text(
-                                'This app needs background location access to trigger geofences when you enter or exit specific areas.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () async {
-                                    Navigator.pop(context);
-                                    setupGeofences();
-                                  },
-                                  child: Text('Grant Permission'),
-                                ),
-                              ],
-                            ),
-                      );
+                      FocusScope.of(context).unfocus();
+                      cubit.previousStep();
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF667eea),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Get Started',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: PageView.builder(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onPageChanged: (index) {
+                        // This will be handled by the BLoC
+                      },
+                      itemCount: cubit.steps.length,
+                      itemBuilder: (context, index) {
+                        return cubit.steps[index].widget;
+                      },
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Privacy note
-                Text(
-                  'By continuing, you agree to our Terms of Service and Privacy Policy',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withOpacity(0.6),
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.8),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<bool> requestBackgroundLocationPermission() async {
-    // Request foreground location permission
-    PermissionStatus foregroundStatus =
-        await Permission.locationWhenInUse.request();
-
-    if (foregroundStatus.isGranted) {
-      // Request background location permission
-      PermissionStatus backgroundStatus =
-          await Permission.locationAlways.request();
-
-      if (backgroundStatus.isGranted) {
-        print('Background location permission granted');
-        return true;
-      } else if (backgroundStatus.isDenied ||
-          backgroundStatus.isPermanentlyDenied) {
-        print('Background location permission denied');
-        if (backgroundStatus.isPermanentlyDenied) {
-          // Guide user to app settings
-          await openAppSettings();
-        }
-        return false;
-      }
-    } else {
-      print('Foreground location permission denied');
-      if (foregroundStatus.isPermanentlyDenied) {
-        // Guide user to app settings
-        await openAppSettings();
-      }
-      return false;
-    }
-    return false;
-  }
-
-  void setupGeofences() async {
-    bool hasPermission = await requestBackgroundLocationPermission();
-
-    if (hasPermission) {
-      try {
-        // Initialize geofencing
-        await locator<GeoFenceService>().initializeFencing();
-        router.go(Paths.HOME);
-      } on LocationServiceDisabledException {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Location Services Disabled'),
-                content: const Text('Please enable location services.'),
-                actions: [
-                  TextButton(
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      await locator<LocationService>().openLocationSettings();
-                    },
-                    child: const Text('Open Settings'),
-                  ),
-                ],
-              ),
         );
-      } on LocationPermissionDeniedException catch (e) {
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Permission Denied'),
-                content: Text(e.message),
-                actions: [
-                  TextButton(
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      if (e.message.contains('permanently denied')) {
-                        await locator<LocationService>().openAppSettings();
-                      }
-                    },
-                    child: const Text('Open Settings'),
-                  ),
-                ],
-              ),
-        );
-      } catch (e) {
-        print('Error setting up geofence: $e');
-        // Optionally show user feedback (e.g., a dialog)
-      }
-    } else {
-      print('Cannot set up geofences without background location permission');
-      // Show user a dialog explaining why permission is needed
-      // Example: showDialog(...);
-    }
+      },
+    );
   }
 }
