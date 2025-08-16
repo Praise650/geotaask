@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geotaask/core/routes/routes.dart';
 
 import '../../../core/routes/router.dart';
+import '../../../core/services/onboarding_manager.dart';
 import '../../widgets/app_logo.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -18,10 +19,22 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(
       Durations.extralong4,
-      () => router.go(
-        Paths.ONBOARDING,
-      ),
+      _checkOnboardingStep,
     );
+  }
+
+  void _checkOnboardingStep() async {
+    final snapshot = await OnboardingManager.isOnboardingCompleted();
+
+    if (snapshot == true) {
+      router.go(
+        Paths.HOME,
+      );
+    } else {
+      router.go(
+        Paths.ONBOARDING,
+      );
+    }
   }
 
   @override
