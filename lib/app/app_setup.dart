@@ -4,10 +4,10 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../core/services/notification_service.dart';
+import '../core/callback_dispatcher.dart';
 import 'app_setup.locator.dart';
 import 'app_logger_setup.dart';
 import 'res/strings.dart';
-import '../main.dart';
 
 class AppSetup {
   static Future<void> initApp() async {
