@@ -1,13 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../widgets/loader/circular_indicator.dart';
 import '../../../widgets/customs/header_widget.dart';
 import '../../../layout/grid_view_widget.dart';
 import '../../../../../app/res/svgs.dart';
 import '../cubit/onboarding_cubit.dart';
 
-class AvatarSetup extends StatelessWidget {
+class AvatarSetup extends StatefulWidget {
   const AvatarSetup({super.key});
+
+  @override
+  State<AvatarSetup> createState() => _AvatarSetupState();
+}
+
+class _AvatarSetupState extends State<AvatarSetup> {
+  Future<void> saveUserDetail() async {
+    final cubit = context.read<OnboardingCubit>();
+    try {
+      final result = await cubit.saveUserDetail();
+      await onValue(result);
+    } catch (error) {
+      await onError(error);
+    }
+  }
+
+  Future<void> onValue(bool value) async {
+    if (value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile created successfully")),
+      );
+      await context.read<OnboardingCubit>().nextStep();
+    }
+  }
+
+  Future<void> onError(Object error) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        // content: Text(error.toString()),
+        content: Text("Failed to create profile: $error"),
+        showCloseIcon: true,
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +54,15 @@ class AvatarSetup extends StatelessWidget {
         const HeaderWidget(
           title: "Set Avatar",
           subtitle:
-              'Select an avatar for your profile picture to personalize your account.',
+              'Select an avatar for your profile picture '
+              'to personalize your account.',
+          subTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 39),
         GridViewWidget(
@@ -39,7 +83,7 @@ class AvatarSetup extends StatelessWidget {
               (int index, listItem, bool isSelected) => Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: isSelected ? Colors.blue : Colors.grey,
+                    color: isSelected ? Colors.white : Colors.grey,
                   ),
                   shape: BoxShape.circle,
                 ),
@@ -55,9 +99,7 @@ class AvatarSetup extends StatelessWidget {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: () async {
-                await cubit.nextStep();
-              },
+              onPressed: saveUserDetail,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF667eea),
@@ -66,10 +108,16 @@ class AvatarSetup extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Continue',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
+              child:
+                  cubit.state.isLoading
+                      ? CircularIndicator()
+                      : const Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
             ),
           ),
         const SizedBox(height: 17),

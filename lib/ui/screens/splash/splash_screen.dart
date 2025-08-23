@@ -1,9 +1,10 @@
+import 'package:flutter_svg/svg.dart';
 import 'package:flutter/material.dart';
 import 'package:geotaask/core/routes/routes.dart';
 
-import '../../../core/routes/router.dart';
 import '../../../core/services/onboarding_manager.dart';
-import '../../widgets/app_logo.dart';
+import '../../../core/routes/router.dart';
+import '../../../app/res/svgs.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,14 +14,10 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
   void initState() {
     super.initState();
-    Future.delayed(
-      Durations.extralong4,
-      _checkOnboardingStep,
-    );
+    Future.delayed(Durations.extralong4, _checkOnboardingStep);
   }
 
   void _checkOnboardingStep() async {
@@ -42,17 +39,39 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF667eea),
-              Color(0xFF764ba2),
-            ],
-          ),
+          color: Color(0xff1B263B),
         ),
         child: Center(
-          child: AppLogo(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                Svgs.logo,
+                height: 92,
+                width: 111,
+                color: Colors.white,
+              ),
+              SizedBox(height: 23),
+              Text(
+                "GeoTaask",
+                style: TextStyle(
+                  fontSize: 54,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 11),
+              Text(
+                "Remind, Track, Achieve",
+                style: TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

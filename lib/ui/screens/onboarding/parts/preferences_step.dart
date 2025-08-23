@@ -3,44 +3,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../dialogs/location_permission_dialog.dart';
 import '../../../widgets/customs/header_widget.dart';
+import '../../../../core/routes/router.dart';
+import '../../../../core/routes/routes.dart';
 import '../cubit/onboarding_cubit.dart';
 
-class PreferencesStep extends StatefulWidget {
+class PreferencesStep extends StatelessWidget {
   const PreferencesStep({super.key});
 
-  @override
-  State<PreferencesStep> createState() => _PreferencesStepState();
-}
-
-class _PreferencesStepState extends State<PreferencesStep> {
-  void enablePermission() async {
+  void grantPermission(BuildContext context) async {
     final cubit = context.read<OnboardingCubit>();
-    await cubit.saveUserDetail().then(onValue).catchError(onError);
-    await cubit.nextStep();
-  }
-
-  Future<void> onValue(bool value) async {
-    if (value == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Profile created successfully"),
-        ),
-      );
-      await showDialog(
-        context: context,
-        builder: (context) => LocationPermissionDialog(),
-      );
-    }
-  }
-
-  Future<void> onError(error) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(error.toString()),
-        showCloseIcon: true,
-        backgroundColor: Colors.red,
-      ),
+    final response = await showDialog(
+      context: context,
+      builder: (context) => LocationPermissionDialog(),
     );
+    if (response) {
+      await cubit.nextStep();
+      router.go(Paths.HOME);
+    }
   }
 
   @override
@@ -56,11 +35,6 @@ class _PreferencesStepState extends State<PreferencesStep> {
           subTextStyle: TextStyle(color: Colors.white, fontSize: 14),
           titleTextStyle: TextStyle(color: Colors.white),
         ),
-        const SizedBox(height: 16),
-
-        const SizedBox(height: 60),
-
-        const SizedBox(height: 20),
 
         const Spacer(),
 
@@ -69,7 +43,7 @@ class _PreferencesStepState extends State<PreferencesStep> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: enablePermission,
+            onPressed: () => grantPermission(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF667eea),

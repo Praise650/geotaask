@@ -104,7 +104,10 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     emit(state.copyWith(isImgSelected: true));
   }
 
+  final _dbService = AppDatabase.instance.taskDao;
+
   Future<bool> saveUserDetail() async {
+    emit(state.copyWith(isLoading: true));
     try {
       final userEntity = UserEntity(
         id: 0,
@@ -114,11 +117,21 @@ class OnboardingCubit extends Cubit<OnboardingState> {
         avatar: _avatar,
         bio: _bio,
       );
-      await AppDatabase.instance.taskDao.saveUser(userEntity);
-      return true;
+      await _dbService.saveUser(userEntity);
+      return await fetchUserProfile();
     } catch (e) {
-      throw Exception("Error Failed to create user profile: $e");
+      rethrow;
+    } finally {
+      emit(state.copyWith(isLoading: false));
     }
-    return false;
+  }
+
+  Future<bool> fetchUserProfile() async {
+    try {
+      final userResponse = await _dbService.getUserProfile();
+      return userResponse != null && userResponse.userName == _userName;
+    } catch (e) {
+      rethrow;
+    }
   }
 }
