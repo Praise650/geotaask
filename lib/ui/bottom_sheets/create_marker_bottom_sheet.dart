@@ -3,12 +3,14 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../app/app_logger_setup.dart';
 import '../../core/blocs/geofence/geofence_bloc.dart';
 import '../../core/blocs/location/location_bloc.dart';
 import '../../core/enums/marker_status.dart';
 import '../../core/model/marker_entity.dart';
 import '../../utils/helpers.dart';
 import '../layout/base_bottom_sheet.dart';
+import '../widgets/inputs/custom_date_picker.dart';
 import '../widgets/inputs/input_field.dart';
 import '../widgets/loader/circular_indicator.dart';
 
@@ -31,6 +33,8 @@ class _CreateMarkerBottomSheetState extends State<CreateMarkerBottomSheet> {
   final titleCtr = TextEditingController();
   final radiusCtr = TextEditingController();
   final descCtr = TextEditingController();
+  DateTime? startDateCtr;
+  DateTime? endDateCtr;
   String? currentAddress;
 
   bool? get validateForm => formKey.currentState?.validate();
@@ -54,9 +58,11 @@ class _CreateMarkerBottomSheetState extends State<CreateMarkerBottomSheet> {
       markerId: Helpers.generateId(),
       description: descCtr.text,
       radius: double.parse(radiusCtr.text),
-      createdAt: DateTime.now().toIso8601String(),
-      isActive: true,
-      status: MarkerStatus.active,
+      createdAt: DateTime.now(),
+      status: MarkerStatus.enabled,
+      startsAt: startDateCtr,
+      endsAt: endDateCtr,
+      notified: false,
     );
     if (validateForm == true) {
       log("BottomSheet Response: ${result.toJson()}", name: "MapService.post");
@@ -82,8 +88,7 @@ class _CreateMarkerBottomSheetState extends State<CreateMarkerBottomSheet> {
           showHandleBar: true,
           hasScrollableChild: true,
           multiplier: .55,
-          builder:
-              (context, size) => SingleChildScrollView(
+          builder: (context, size) => SingleChildScrollView(
                 child: Form(
                   key: formKey,
                   child: Column(
@@ -117,7 +122,7 @@ class _CreateMarkerBottomSheetState extends State<CreateMarkerBottomSheet> {
                                 setState(
                                   () => currentAddress = state.address.address,
                                 );
-                                print("Current Address: $currentAddress");
+                                logger.debug("Current Address: $currentAddress");
                               }
                             },
                             child: BlocBuilder<LocationBloc, LocationState>(
@@ -141,6 +146,22 @@ class _CreateMarkerBottomSheetState extends State<CreateMarkerBottomSheet> {
                             hintText: "Write a description",
                             labelText: "Description",
                             maxLines: 2,
+                          ),
+                          CustomDateTimePicker(
+                            initialDateTime: DateTime.now(),
+                            onChanged: (newDateTime) {
+                              startDateCtr = newDateTime;
+                              print('DateTime 1 changed: $newDateTime');
+                            },
+                            hintText: 'Choose a start date and time',
+                          ),
+                          CustomDateTimePicker(
+                            initialDateTime: DateTime.now(),
+                            onChanged: (newDateTime) {
+                              endDateCtr = newDateTime;
+                              print('DateTime 1 changed: $newDateTime');
+                            },
+                            hintText: 'Choose a start date and time',
                           ),
                         ],
                       ),

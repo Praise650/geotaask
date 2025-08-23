@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../ui/layout/bottom_nav_layout.dart';
-import '../../ui/screens/history/history_screen.dart';
-import '../../ui/screens/home/home_screen.dart';
-import '../../ui/screens/home_example/home_example.dart';
+import '../../ui/screens/theme_example/theme_example_screen.dart';
 import '../../ui/screens/onboarding/onboarding_screen.dart';
-import '../../ui/screens/onboarding/splash_screen.dart';
-import '../../ui/screens/profile/profile_screen.dart';
+import '../../ui/screens/theme_example/theme_example.dart';
+import '../../ui/screens/settings/settings_screen.dart';
+import '../../ui/screens/history/history_screen.dart';
+import '../../ui/screens/splash/splash_screen.dart';
+import '../../ui/layout/bottom_nav_layout.dart';
+import '../../ui/screens/home/home_screen.dart';
 import 'routes.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -20,6 +21,22 @@ final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   debugLogDiagnostics: true,
   restorationScopeId: "app",
+  // redirect: (context, state) async {
+  //   // Check if we're already on splash or trying to go somewhere specific
+  //   if (state.uri.toString() == '/splash') {
+  //     return null; // Allow splash screen
+  //   }
+  //
+  //   // For all other routes, check onboarding status
+  //   final isOnboardingCompleted = await OnboardingManager.isOnboardingCompleted();
+  //
+  //   if (!isOnboardingCompleted) {
+  //     final currentStep = await OnboardingManager.getCurrentStep();
+  //     return '/onboarding?step=$currentStep';
+  //   }
+  //
+  //   return null; // Allow the route
+  // },
   routes: [
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
@@ -35,9 +52,15 @@ final router = GoRouter(
     ),
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
-      path: Paths.HOMEEXAMPLE,
-      name: Routes.HOMEEXAMPLE,
-      builder: (context, state) => const HomeExample(),
+      path: Paths.THEMEEXAMPLE,
+      name: Routes.THEMEEXAMPLE,
+      builder: (context, state) => const ThemeExample(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: Paths.THEMEEXAMPLESCREEN,
+      name: Routes.THEMEEXAMPLESCREEN,
+      builder: (context, state) => const ThemeExampleScreen(),
     ),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
@@ -66,7 +89,7 @@ final router = GoRouter(
           path: Paths.PROFILE,
           name: Routes.PROFILE,
           parentNavigatorKey: _shellNavigatorKey,
-          builder: (context, state) => const ProfileScreen(),
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
     ),

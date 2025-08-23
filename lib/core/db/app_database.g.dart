@@ -96,9 +96,9 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `user_entity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `userId` TEXT, `address` TEXT, `avatar` TEXT)');
+            'CREATE TABLE IF NOT EXISTS `user_entity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `userId` TEXT, `address` TEXT, `avatar` TEXT, `userName` TEXT, `bio` TEXT)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `tag_location_entity` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `radius` REAL, `latitude` REAL, `longitude` REAL, `markerId` TEXT, `title` TEXT, `description` TEXT, `createdAt` TEXT, `enabled` INTEGER NOT NULL, `status` TEXT NOT NULL)');
+            'CREATE TABLE IF NOT EXISTS `geofences` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `radius` REAL, `latitude` REAL, `longitude` REAL, `markerId` TEXT, `title` TEXT, `description` TEXT, `notified` INTEGER NOT NULL, `status` TEXT NOT NULL, `createdAt` TEXT, `startsAt` TEXT, `endsAt` TEXT)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -124,11 +124,13 @@ class _$TaskDao extends TaskDao {
                   'id': item.id,
                   'userId': item.userId,
                   'address': item.address,
-                  'avatar': item.avatar
+                  'avatar': item.avatar,
+                  'userName': item.userName,
+                  'bio': item.bio
                 }),
         _markerEntityInsertionAdapter = InsertionAdapter(
             database,
-            'tag_location_entity',
+            'geofences',
             (MarkerEntity item) => <String, Object?>{
                   'id': item.id,
                   'radius': item.radius,
@@ -137,14 +139,16 @@ class _$TaskDao extends TaskDao {
                   'markerId': item.markerId,
                   'title': item.title,
                   'description': item.description,
-                  'createdAt': item.createdAt,
-                  'enabled': item.enabled,
-                  'status': _markerStatusConverter.encode(item.status)
+                  'notified': _boolConverter.encode(item.notified),
+                  'status': _markerStatusConverter.encode(item.status),
+                  'createdAt': _dateTimeStringConverter.encode(item.createdAt),
+                  'startsAt': _dateTimeStringConverter.encode(item.startsAt),
+                  'endsAt': _dateTimeStringConverter.encode(item.endsAt)
                 },
             changeListener),
         _markerEntityUpdateAdapter = UpdateAdapter(
             database,
-            'tag_location_entity',
+            'geofences',
             ['id'],
             (MarkerEntity item) => <String, Object?>{
                   'id': item.id,
@@ -154,9 +158,11 @@ class _$TaskDao extends TaskDao {
                   'markerId': item.markerId,
                   'title': item.title,
                   'description': item.description,
-                  'createdAt': item.createdAt,
-                  'enabled': item.enabled,
-                  'status': _markerStatusConverter.encode(item.status)
+                  'notified': _boolConverter.encode(item.notified),
+                  'status': _markerStatusConverter.encode(item.status),
+                  'createdAt': _dateTimeStringConverter.encode(item.createdAt),
+                  'startsAt': _dateTimeStringConverter.encode(item.startsAt),
+                  'endsAt': _dateTimeStringConverter.encode(item.endsAt)
                 },
             changeListener);
 
@@ -179,12 +185,14 @@ class _$TaskDao extends TaskDao {
             id: row['id'] as int?,
             userId: row['userId'] as String?,
             address: row['address'] as String?,
-            avatar: row['avatar'] as String?));
+            avatar: row['avatar'] as String?,
+            userName: row['userName'] as String?,
+            bio: row['bio'] as String?));
   }
 
   @override
   Stream<List<MarkerEntity>> getGeofenceMarkers() {
-    return _queryAdapter.queryListStream('SELECT * FROM tag_location_entity',
+    return _queryAdapter.queryListStream('SELECT * FROM geofences',
         mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
@@ -193,16 +201,20 @@ class _$TaskDao extends TaskDao {
             markerId: row['markerId'] as String?,
             title: row['title'] as String?,
             description: row['description'] as String?,
-            createdAt: row['createdAt'] as String?,
-            enabled: row['enabled'] as int?,
-            status: _markerStatusConverter.decode(row['status'] as String)),
-        queryableName: 'tag_location_entity',
+            notified: _boolConverter.decode(row['notified'] as int),
+            status: _markerStatusConverter.decode(row['status'] as String),
+            createdAt:
+                _dateTimeStringConverter.decode(row['createdAt'] as String?),
+            startsAt:
+                _dateTimeStringConverter.decode(row['startsAt'] as String?),
+            endsAt: _dateTimeStringConverter.decode(row['endsAt'] as String?)),
+        queryableName: 'geofences',
         isView: false);
   }
 
   @override
   Future<List<MarkerEntity>> fetchGeofenceMarkers() async {
-    return _queryAdapter.queryList('SELECT * FROM tag_location_entity',
+    return _queryAdapter.queryList('SELECT * FROM geofences',
         mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
@@ -211,15 +223,18 @@ class _$TaskDao extends TaskDao {
             markerId: row['markerId'] as String?,
             title: row['title'] as String?,
             description: row['description'] as String?,
-            createdAt: row['createdAt'] as String?,
-            enabled: row['enabled'] as int,
-            status: _markerStatusConverter.decode(row['status'] as String)));
+            notified: _boolConverter.decode(row['notified'] as int),
+            status: _markerStatusConverter.decode(row['status'] as String),
+            createdAt:
+                _dateTimeStringConverter.decode(row['createdAt'] as String?),
+            startsAt:
+                _dateTimeStringConverter.decode(row['startsAt'] as String?),
+            endsAt: _dateTimeStringConverter.decode(row['endsAt'] as String?)));
   }
 
   @override
   Future<MarkerEntity?> getGeofenceMarkerById(int id) async {
-    return _queryAdapter.query(
-        'SELECT * FROM tag_location_entity WHERE id = ?1',
+    return _queryAdapter.query('SELECT * FROM geofences WHERE id = ?1',
         mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
@@ -228,16 +243,19 @@ class _$TaskDao extends TaskDao {
             markerId: row['markerId'] as String?,
             title: row['title'] as String?,
             description: row['description'] as String?,
-            createdAt: row['createdAt'] as String?,
-            enabled: row['enabled'] as int,
-            status: _markerStatusConverter.decode(row['status'] as String)),
+            notified: _boolConverter.decode(row['notified'] as int),
+            status: _markerStatusConverter.decode(row['status'] as String),
+            createdAt:
+                _dateTimeStringConverter.decode(row['createdAt'] as String?),
+            startsAt:
+                _dateTimeStringConverter.decode(row['startsAt'] as String?),
+            endsAt: _dateTimeStringConverter.decode(row['endsAt'] as String?)),
         arguments: [id]);
   }
 
   @override
   Future<MarkerEntity?> getGeofenceMarkerByMarkerId(String markerId) async {
-    return _queryAdapter.query(
-        'SELECT * FROM tag_location_entity WHERE markerId = ?1',
+    return _queryAdapter.query('SELECT * FROM geofences WHERE markerId = ?1',
         mapper: (Map<String, Object?> row) => MarkerEntity(
             id: row['id'] as int?,
             radius: row['radius'] as double?,
@@ -246,28 +264,53 @@ class _$TaskDao extends TaskDao {
             markerId: row['markerId'] as String?,
             title: row['title'] as String?,
             description: row['description'] as String?,
-            createdAt: row['createdAt'] as String?,
-            enabled: row['enabled'] as int,
-            status: _markerStatusConverter.decode(row['status'] as String)),
+            notified: _boolConverter.decode(row['notified'] as int),
+            status: _markerStatusConverter.decode(row['status'] as String),
+            createdAt:
+                _dateTimeStringConverter.decode(row['createdAt'] as String?),
+            startsAt:
+                _dateTimeStringConverter.decode(row['startsAt'] as String?),
+            endsAt: _dateTimeStringConverter.decode(row['endsAt'] as String?)),
         arguments: [markerId]);
   }
 
   @override
+  Future<List<MarkerEntity>?> fetchGeofenceMarkerByStatus(
+      MarkerStatus status) async {
+    return _queryAdapter.queryList('SELECT * FROM geofences WHERE status = ?1',
+        mapper: (Map<String, Object?> row) => MarkerEntity(
+            id: row['id'] as int?,
+            radius: row['radius'] as double?,
+            latitude: row['latitude'] as double?,
+            longitude: row['longitude'] as double?,
+            markerId: row['markerId'] as String?,
+            title: row['title'] as String?,
+            description: row['description'] as String?,
+            notified: _boolConverter.decode(row['notified'] as int),
+            status: _markerStatusConverter.decode(row['status'] as String),
+            createdAt:
+                _dateTimeStringConverter.decode(row['createdAt'] as String?),
+            startsAt:
+                _dateTimeStringConverter.decode(row['startsAt'] as String?),
+            endsAt: _dateTimeStringConverter.decode(row['endsAt'] as String?)),
+        arguments: [_markerStatusConverter.encode(status)]);
+  }
+
+  @override
   Future<void> deleteGeofenceMarkers() async {
-    await _queryAdapter.queryNoReturn('DELETE FROM tag_location_entity');
+    await _queryAdapter.queryNoReturn('DELETE FROM geofences');
   }
 
   @override
   Future<void> deleteGeofenceMarkerId(int id) async {
-    await _queryAdapter.queryNoReturn(
-        'DELETE FROM tag_location_entity WHERE id = ?1',
-        arguments: [id]);
+    await _queryAdapter
+        .queryNoReturn('DELETE FROM geofences WHERE id = ?1', arguments: [id]);
   }
 
   @override
   Future<void> deleteGeofenceMarkerByMarkerId(String markerId) async {
     await _queryAdapter.queryNoReturn(
-        'DELETE FROM tag_location_entity WHERE markerId = ?1',
+        'DELETE FROM geofences WHERE markerId = ?1',
         arguments: [markerId]);
   }
 
@@ -290,3 +333,5 @@ class _$TaskDao extends TaskDao {
 
 // ignore_for_file: unused_element
 final _markerStatusConverter = MarkerStatusConverter();
+final _dateTimeStringConverter = DateTimeStringConverter();
+final _boolConverter = BoolConverter();
