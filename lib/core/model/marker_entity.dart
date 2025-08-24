@@ -4,7 +4,33 @@ import '../../utils/helpers.dart';
 import '../enums/marker_status.dart';
 import 'location_entity.dart';
 
-@Entity(tableName: "tag_location_entity")
+// String-based converter (if you prefer ISO format)
+class DateTimeStringConverter extends TypeConverter<DateTime?, String?> {
+  @override
+  DateTime? decode(String? databaseValue) {
+    if (databaseValue == null) return null;
+    return DateTime.parse(databaseValue);
+  }
+
+  @override
+  String? encode(DateTime? value) {
+    return value?.toIso8601String();
+  }
+}
+
+class BoolConverter extends TypeConverter<bool, int> {
+  @override
+  int encode(bool value) {
+    return value ? 1 : 0;
+  }
+
+  @override
+  bool decode(int databaseValue) {
+    return databaseValue == 1;
+  }
+}
+
+@Entity(tableName: "geofences")
 class MarkerEntity {
   @PrimaryKey(autoGenerate: true)
   int? id;
@@ -14,9 +40,16 @@ class MarkerEntity {
   final String? markerId;
   final String? title;
   final String? description;
-  final String? createdAt;
-  final int? enabled;
+  @TypeConverters([BoolConverter])
+  final bool notified;
+  @TypeConverters([MarkerStatusConverter])
   final MarkerStatus status;
+  @TypeConverters([DateTimeStringConverter])
+  final DateTime? createdAt;
+  @TypeConverters([DateTimeStringConverter])
+  final DateTime? startsAt;
+  @TypeConverters([DateTimeStringConverter])
+  final DateTime? endsAt;
 
   MarkerEntity({
     this.id,
@@ -26,9 +59,11 @@ class MarkerEntity {
     this.markerId,
     this.title,
     this.description,
+    this.notified = false,
+    this.status = MarkerStatus.enabled,
     this.createdAt,
-    this.enabled = 1,
-    this.status = MarkerStatus.inactive,
+    this.startsAt,
+    this.endsAt,
   });
 
   MarkerEntity copyWith({
@@ -39,9 +74,11 @@ class MarkerEntity {
     String? markerId,
     String? title,
     String? description,
-    String? createdAt,
-    int? enabled,
+    bool? notified,
     MarkerStatus? status,
+    DateTime? createdAt,
+    DateTime? startsAt,
+    DateTime? endsAt,
   }) {
     return MarkerEntity(
       id: id ?? this.id,
@@ -51,37 +88,125 @@ class MarkerEntity {
       markerId: markerId ?? this.markerId,
       title: title ?? this.title,
       description: description ?? this.description,
-      createdAt: createdAt ?? this.createdAt,
-      enabled: enabled ?? this.enabled,
+      notified: notified ?? this.notified,
       status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      startsAt: startsAt ?? this.startsAt,
+      endsAt: endsAt ?? this.endsAt,
+    );
+  }
+  
+  // void mute() {
+  //   copyWith(
+  //     status: MarkerStatus.muted,
+  //     notified: true,
+  //   );
+  // }
+  //
+  // void unMute() {
+  //   copyWith(
+  //     status: MarkerStatus.enabled,
+  //     notified: false,
+  //   );
+  // }
+  //
+  // void snooze() {
+  //   copyWith(
+  //     status: MarkerStatus.enabled,
+  //     notified: false,
+  //   );
+  // }
+  //
+  // void markComplete() {
+  //   copyWith(
+  //     status: MarkerStatus.completed,
+  //     notified: true,
+  //   );
+  // }
+
+  // Change these methods to return the updated instance
+  MarkerEntity restart() {
+    return copyWith(
+      status: MarkerStatus.enabled,
+      notified: false,
     );
   }
 
-  void disable() {
-    copyWith(status: MarkerStatus.inactive, enabled: 0);
+  MarkerEntity mute() {
+    return copyWith(
+      status: MarkerStatus.muted,
+      notified: true,
+    );
   }
 
-  void markComplete() {
-    copyWith(status: MarkerStatus.completed, enabled: 0);
+  MarkerEntity unMute() {
+    return copyWith(
+      status: MarkerStatus.enabled,
+      notified: false,
+    );
+  }
+
+  MarkerEntity snooze() {
+    return copyWith(
+      status: MarkerStatus.enabled,
+      notified: false,
+    );
+  }
+
+  MarkerEntity markComplete() {
+    return copyWith(
+      status: MarkerStatus.completed,
+      notified: true,
+    );
   }
 
   bool isEnabled() {
-    return enabled == 1;
+    return status == MarkerStatus.enabled;
+  }
+
+  bool isMuted() {
+    return status == MarkerStatus.muted;
+  }
+
+  bool isCompleted() {
+    return status == MarkerStatus.completed;
+  }
+
+  // for consistency
+  bool isNotified() {
+    return notified;
+  }
+
+  // for consistency
+  bool isNotNotified() {
+    return !notified;
   }
 
   bool isActive() {
-    return status == MarkerStatus.active;
+    return isEnabled() &&
+        isNotExpired() &&
+        isNotNotified();
   }
 
-  bool isComplete() {
-    return status == MarkerStatus.completed;
+  bool hasBegun() {
+    return startsAt == null ||
+        startsAt!.isBefore(DateTime.now());
+  }
+
+  bool isExpired() {
+    return endsAt != null &&
+        endsAt!.isBefore(DateTime.now());
+  }
+
+  bool isNotExpired() {
+    return !isExpired();
   }
 
   bool isInRange(LocationEntity currentLocation) {
     final calculatedDistance = Helpers.calcDistanceBetweenInM(
-      currentLocation,
-      LocationEntity(latitude: latitude!, longitude: longitude!),
-    );
+      currentLocation.latitude,currentLocation.longitude,
+      latitude!, longitude!);
+    // return calculatedDistance <= (radius ?? 500.0);
     return calculatedDistance <= 500;
   }
 
@@ -93,12 +218,14 @@ class MarkerEntity {
     markerId: json["markerId"],
     title: json["title"],
     description: json["description"],
-    createdAt: json["created_at"],
-    enabled: json["enabled"] ?? 1,
+    notified: json['notified'],
     status: MarkerStatus.values.firstWhere(
       (e) => e.name == json["status"],
-      orElse: () => MarkerStatus.inactive,
+      orElse: () => MarkerStatus.enabled,
     ),
+    createdAt: json["createdAt"] != null ? DateTime.parse(json["createdAt"]) : null,
+    startsAt: json['startsAt'] != null ? DateTime.parse(json['startsAt']) : null,
+    endsAt: json['endsAt'] != null ? DateTime.parse(json['endsAt']) : null,
   );
 
   Map<String, dynamic> toJson() => {
@@ -109,8 +236,10 @@ class MarkerEntity {
     "markerId": markerId,
     "title": title,
     "description": description,
-    "created_at": createdAt,
-    "enabled": enabled,
     "status": status.name,
+    "notified": notified,
+    "createdAt": createdAt?.toIso8601String(),
+    'startsAt': startsAt?.toIso8601String(),
+    'endsAt': endsAt?.toIso8601String(),
   };
 }
