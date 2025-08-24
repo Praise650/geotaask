@@ -7,31 +7,42 @@ class UserEntity {
   final String? userId;
   final String? address;
   final String? avatar;
+  final String? userName;
+  final String? bio;
 
   UserEntity({
     this.id,
     this.userId,
     this.address,
     this.avatar,
+    this.userName,
+    this.bio,
   });
 
-  factory UserEntity.fromJson(Map<String, dynamic> json) => UserEntity(
-    id: json["id"],
-    userId: json["userId"],
-    address: json["address"],
-    avatar: json["avatar"],
-  );
+  factory UserEntity.fromJson(Map<String, dynamic> json) {
+    return UserEntity(
+      id: json["id"],
+      userId: json["userId"] as String?,
+      address: json["address"] as String?,
+      avatar: json["avatar"] as String?,
+      userName: json['userName'] as String?,
+      bio: json["bio"] as String?
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     "id": id,
     "userId": userId,
     "address": address,
     "avatar": avatar,
+    "userName": userName,
+    "bio": bio,
   };
 
   @override
   String toString() {
-    return 'UserEntity(id: $id, userId: $userId, address: $address, avatar: $avatar)';
+    return 'UserEntity(id: $id, userId: $userId, address: $address, '
+        'avatar: $avatar, userName: $userName, bio: $bio)';
   }
 
   @override
@@ -41,14 +52,18 @@ class UserEntity {
         other.id == id &&
         other.userId == userId &&
         other.address == address &&
-        other.avatar == avatar;
+        other.avatar == avatar &&
+        other.userName == userName &&
+        other.bio == bio;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-    userId.hashCode ^
-    address.hashCode ^
-    avatar.hashCode;
+        userId.hashCode ^
+        address.hashCode ^
+        avatar.hashCode ^
+        userName.hashCode ^
+        bio.hashCode;
   }
 }
