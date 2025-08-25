@@ -1,5 +1,6 @@
 class Svgs {
   static const String _svgPath = 'assets/svgs';
+  static const String _logoPath = 'assets/logos';
 
   static const String home = "$_svgPath/home.svg";
   static const String profile = "$_svgPath/profile.svg";
@@ -14,4 +15,7 @@ class Svgs {
   static String avatar7 = "$_svgPath/AVATARZ-7.png";
   static String avatar8 = "$_svgPath/AVATARZ-8.png";
   static String avatar9 = "$_svgPath/AVATARZ-9.png";
+
+  //logo
+  static String logo = "$_logoPath/geotaask.svg";
 }

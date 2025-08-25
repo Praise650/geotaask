@@ -1,5 +1,5 @@
 class Strings {
-
+  static const String mapKey = 'AIzaSyCrXpSHurKH2wXwSLIKmIpeckjLKutRH7I';
 }
 
 abstract class Common {
