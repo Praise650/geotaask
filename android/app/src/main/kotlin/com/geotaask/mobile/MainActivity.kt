@@ -1,4 +1,4 @@
-package com.geotaask.mobile.geotaask
+package com.geotaask.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

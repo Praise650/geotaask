@@ -16,8 +16,8 @@ class AppSetup {
     Common.appVersion = packageInfo.version;
     Common.packageName = packageInfo.packageName;
     Common.buildNumber = packageInfo.buildNumber;
-    setupLocator();
-    initLogging();
+    await setupLocator();
+    // set up logging
     _initNotification();
     _initWorkManager();
   }
